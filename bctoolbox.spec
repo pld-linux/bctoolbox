@@ -5,15 +5,18 @@
 Summary:	Utility library for software from Belledonne Communications
 Summary(pl.UTF-8):	Biblioteka narzędziowa dla oprogramowania firmy Belledonne Communications
 Name:		bctoolbox
-Version:	0.6.0
-Release:	2
-License:	GPL v2+
+Version:	4.4.0
+Release:	1
+License:	GPL v3+
 Group:		Libraries
-Source0:	https://linphone.org/releases/sources/bctoolbox/%{name}-%{version}.tar.gz
-# Source0-md5:	aeeac76938dd3b82a17ff498f81caef2
+#Source0Download: https://gitlab.linphone.org/BC/public/bctoolbox/tags
+Source0:	https://gitlab.linphone.org/BC/public/bctoolbox/-/archive/%{version}/%{name}-%{version}.tar.bz2
+# Source0-md5:	b1239d1aebca6acdf5662d5970c159ab
 URL:		https://linphone.org/
-BuildRequires:	bcunit-devel
+# with junit xml support
+BuildRequires:	bcunit-devel >= 3.0.2-3.20200822
 BuildRequires:	cmake >= 2.8.12
+BuildRequires:	libdecaf-devel
 BuildRequires:	libstdc++-devel >= 6:4.7
 BuildRequires:	mbedtls-devel
 BuildRequires:	sed >= 4.0
@@ -32,6 +35,8 @@ Summary:	Header files for bctoolbox libraries
 Summary(pl.UTF-8):	Pliki nagłówkowe bibliotek bctoolbox
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
+Requires:	libdecaf-devel
+Requires:	mbedtls-devel
 
 %description devel
 Header files for bctoolbox libraries.
@@ -69,7 +74,7 @@ rm -rf $RPM_BUILD_ROOT
 	DESTDIR=$RPM_BUILD_ROOT
 
 # disable completeness check incompatible with split packaging
-%{__sed} -i -e '/^foreach(target .*IMPORT_CHECK_TARGETS/,/^endforeach/d; /^unset(_IMPORT_CHECK_TARGETS)/d' $RPM_BUILD_ROOT%{_datadir}/bctoolbox/cmake/BcToolboxTargets.cmake
+%{__sed} -i -e '/^foreach(target .*IMPORT_CHECK_TARGETS/,/^endforeach/d; /^unset(_IMPORT_CHECK_TARGETS)/d' $RPM_BUILD_ROOT%{_datadir}/bctoolbox/cmake/bctoolboxTargets.cmake
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -79,7 +84,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc AUTHORS NEWS README.md
+%doc CHANGELOG.md README.md
 %attr(755,root,root) %{_libdir}/libbctoolbox.so.1
 %attr(755,root,root) %{_libdir}/libbctoolbox-tester.so.1
 
