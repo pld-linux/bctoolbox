@@ -70,7 +70,8 @@ Statyczne biblioteki bctoolbox.
 install -d build
 cd build
 %cmake .. \
-	%{!?with_static_libs:-DENABLE_STATIC=OFF}
+	%{!?with_static_libs:-DENABLE_STATIC=OFF} \
+	-DENABLE_STRICT=OFF
 
 %{__make}
 
