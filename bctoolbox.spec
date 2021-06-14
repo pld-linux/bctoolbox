@@ -1,25 +1,32 @@
 #
 # Conditional build:
+%bcond_without	dtls_srtp	# DTLS SRTP support
 %bcond_without	static_libs	# static libraries
 
+%if %{with dtls_srtp}
+%define		mbedtls_ver	2.26.0-2
+%else
+%define		mbedtls_ver	2
+%endif
 Summary:	Utility library for software from Belledonne Communications
 Summary(pl.UTF-8):	Biblioteka narzędziowa dla oprogramowania firmy Belledonne Communications
 Name:		bctoolbox
-Version:	4.4.0
-Release:	2
+Version:	4.5.15
+Release:	1
 License:	GPL v3+
 Group:		Libraries
 #Source0Download: https://gitlab.linphone.org/BC/public/bctoolbox/tags
 Source0:	https://gitlab.linphone.org/BC/public/bctoolbox/-/archive/%{version}/%{name}-%{version}.tar.bz2
-# Source0-md5:	b1239d1aebca6acdf5662d5970c159ab
+# Source0-md5:	479fd5eaa6242d8622f957744794f541
 URL:		https://linphone.org/
 # with junit xml support
 BuildRequires:	bcunit-devel >= 3.0.2-3.20200822
 BuildRequires:	cmake >= 2.8.12
 BuildRequires:	libdecaf-devel
 BuildRequires:	libstdc++-devel >= 6:4.7
-BuildRequires:	mbedtls-devel
+BuildRequires:	mbedtls-devel >= %{mbedtls_ver}
 BuildRequires:	sed >= 4.0
+Requires:	mbedtls >= %{mbedtls_ver}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -36,7 +43,7 @@ Summary(pl.UTF-8):	Pliki nagłówkowe bibliotek bctoolbox
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 Requires:	libdecaf-devel
-Requires:	mbedtls-devel
+Requires:	mbedtls-devel >= %{mbedtls_ver}
 
 %description devel
 Header files for bctoolbox libraries.
