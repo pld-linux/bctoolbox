@@ -11,13 +11,13 @@
 Summary:	Utility library for software from Belledonne Communications
 Summary(pl.UTF-8):	Biblioteka narzędziowa dla oprogramowania firmy Belledonne Communications
 Name:		bctoolbox
-Version:	4.5.15
+Version:	4.5.20
 Release:	1
 License:	GPL v3+
 Group:		Libraries
 #Source0Download: https://gitlab.linphone.org/BC/public/bctoolbox/tags
 Source0:	https://gitlab.linphone.org/BC/public/bctoolbox/-/archive/%{version}/%{name}-%{version}.tar.bz2
-# Source0-md5:	479fd5eaa6242d8622f957744794f541
+# Source0-md5:	646152e985aa33080ce733c0ad7ab1e8
 URL:		https://linphone.org/
 # with junit xml support
 BuildRequires:	bcunit-devel >= 3.0.2-3.20200822
