@@ -67,8 +67,8 @@ Statyczne biblioteki bctoolbox.
 %setup -q
 
 %build
-install -d build
-cd build
+install -d builddir
+cd builddir
 %cmake .. \
 	%{!?with_static_libs:-DENABLE_STATIC=OFF}
 
@@ -77,7 +77,7 @@ cd build
 %install
 rm -rf $RPM_BUILD_ROOT
 
-%{__make} -C build install \
+%{__make} -C builddir install \
 	DESTDIR=$RPM_BUILD_ROOT
 
 # disable completeness check incompatible with split packaging
