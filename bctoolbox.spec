@@ -12,7 +12,7 @@ Summary:	Utility library for software from Belledonne Communications
 Summary(pl.UTF-8):	Biblioteka narzędziowa dla oprogramowania firmy Belledonne Communications
 Name:		bctoolbox
 Version:	5.1.17
-Release:	1
+Release:	0.1
 License:	GPL v3+
 Group:		Libraries
 #Source0Download: https://gitlab.linphone.org/BC/public/bctoolbox/tags
