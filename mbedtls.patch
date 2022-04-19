@@ -1,0 +1,203 @@
+diff -up bctoolbox-5.1.17/src/crypto.org/mbedtls.c bctoolbox-5.1.17/src/crypto/mbedtls.c
+--- bctoolbox-5.1.17/src/crypto.org/mbedtls.c	2022-03-29 19:10:26.000000000 +0200
++++ bctoolbox-5.1.17/src/crypto/mbedtls.c	2022-04-19 09:54:06.089876459 +0200
+@@ -66,6 +66,32 @@ void bctbx_clean(void *buffer, size_t si
+ #endif
+ }
+ 
++#if MBEDTLS_VERSION_NUMBER >= 0x03000000
++#define RNG , rng_get, NULL
++#else
++#define RNG
++#endif
++
++#if MBEDTLS_VERSION_NUMBER >= 0x03000000
++void mg_random(void *buf, size_t len) {
++  int done = 0;
++  unsigned char *p = (unsigned char *) buf;
++  FILE *fp = fopen("/dev/urandom", "rb");
++  if (fp != NULL) {
++    if (fread(buf, 1, len, fp) == len) done = 1;
++    fclose(fp);
++  }
++  // If everything above did not work, fallback to a pseudo random generator
++  while (!done && len--) *p++ = (unsigned char) (rand() & 255);
++}
++
++static int rng_get(void *p_rng, unsigned char *buf, size_t len) {
++	  (void) p_rng;
++	    mg_random(buf, len);
++	      return 0;
++}
++#endif
++
+ /*** Error code translation ***/
+ void bctbx_strerror(int32_t error_code, char *buffer, size_t buffer_length) {
+ 	if (error_code>0) {
+@@ -132,7 +158,7 @@ char *bctbx_signing_key_get_pem(bctbx_si
+ int32_t bctbx_signing_key_parse(bctbx_signing_key_t *key, const char *buffer, size_t buffer_length, const unsigned char *password, size_t password_length) {
+ 	int err;
+ 	
+-	err=mbedtls_pk_parse_key((mbedtls_pk_context *)key, (const unsigned char *)buffer, buffer_length, password, password_length);
++	err=mbedtls_pk_parse_key((mbedtls_pk_context *)key, (const unsigned char *)buffer, buffer_length, password, password_length RNG);
+ 	
+ 	if (err<0) {
+ 		char tmp[128];
+@@ -146,7 +172,7 @@ int32_t bctbx_signing_key_parse(bctbx_si
+ int32_t bctbx_signing_key_parse_file(bctbx_signing_key_t *key, const char *path, const char *password) {
+ 	int err;
+ 	
+-	err=mbedtls_pk_parse_keyfile((mbedtls_pk_context *)key, path, password);
++	err=mbedtls_pk_parse_keyfile((mbedtls_pk_context *)key, path, password RNG);
+ 	
+ 	if (err<0) {
+ 		char tmp[128];
+@@ -233,7 +259,7 @@ bctbx_list_t *bctbx_x509_certificate_get
+ 	if (cert != NULL) {
+ 		mbedtls_x509_crt *mbedtls_cert = (mbedtls_x509_crt *)cert; // bctbx_x509_certificate_t is just a cast of mbedtls_x509_crt
+ 		/* parse subjectAltName if any */
+-		if( mbedtls_cert->ext_types & MBEDTLS_X509_EXT_SUBJECT_ALT_NAME ) {
++		if( mbedtls_cert->MBEDTLS_PRIVATE(ext_types) & MBEDTLS_X509_EXT_SUBJECT_ALT_NAME ) {
+ 			const mbedtls_x509_sequence *cur = &(mbedtls_cert->subject_alt_names);
+ 			while (cur != NULL) {
+ 				ret = bctbx_list_append(ret, bctbx_strndup((const char*)cur->buf.p, (int)cur->buf.len));
+@@ -363,7 +389,7 @@ int32_t bctbx_x509_certificate_get_signa
+ 
+ 	crt = (mbedtls_x509_crt *)certificate;
+ 
+-	switch (crt->sig_md) {
++	switch (crt->MBEDTLS_PRIVATE(sig_md)) {
+ 		case MBEDTLS_MD_SHA1:
+ 			*hash_algorithm = BCTBX_MD_SHA1;
+ 		break;
+@@ -424,7 +450,7 @@ int32_t bctbx_x509_certificate_get_finge
+ 			hash_id = MBEDTLS_MD_SHA512;
+ 			break;
+ 		default: /* nothing specified, use the hash algo used in the certificate signature */
+-			hash_id = crt->sig_md;
++			hash_id = crt->MBEDTLS_PRIVATE(sig_md);
+ 			break;
+ 	}
+ 
+@@ -712,24 +738,32 @@ bctbx_DHMContext_t *bctbx_CreateDHMConte
+ 	/* set parameters in the context */
+ 	context->algo=DHMAlgo;
+ 	context->secretLength = secretLength;
++
++        static const unsigned char dhm_P_2048[] =
++            MBEDTLS_DHM_RFC3526_MODP_2048_P_BIN;
++        static const unsigned char dhm_P_3072[] =
++            MBEDTLS_DHM_RFC3526_MODP_3072_P_BIN;
++        static const unsigned char dhm_G_2048[] =
++            MBEDTLS_DHM_RFC3526_MODP_2048_G_BIN;
++        static const unsigned char dhm_G_3072[] =
++            MBEDTLS_DHM_RFC3526_MODP_3072_G_BIN;
++
+ 	switch (DHMAlgo) {
+ 		case BCTBX_DHM_2048:
+ 			/* set P and G in the mbedtls context */
+-			if ((mbedtls_mpi_read_string(&(mbedtlsDhmContext->P), 16, MBEDTLS_DHM_RFC3526_MODP_2048_P) != 0) ||
+-			(mbedtls_mpi_read_string(&(mbedtlsDhmContext->G), 16, MBEDTLS_DHM_RFC3526_MODP_2048_G) != 0)) {
++			if ((mbedtls_mpi_read_binary(&(mbedtlsDhmContext->MBEDTLS_PRIVATE(P)), dhm_P_2048, sizeof(dhm_P_2048)) != 0) ||
++			(mbedtls_mpi_read_binary(&(mbedtlsDhmContext->MBEDTLS_PRIVATE(G)), dhm_G_2048, sizeof(dhm_G_2048)) != 0)) {
+ 				return NULL;
+ 			}
+ 			context->primeLength=256;
+-			mbedtlsDhmContext->len=256;
+ 			break;
+ 		case BCTBX_DHM_3072:
+ 			/* set P and G in the mbedtls context */
+-			if ((mbedtls_mpi_read_string(&(mbedtlsDhmContext->P), 16, MBEDTLS_DHM_RFC3526_MODP_3072_P) != 0) ||
+-			(mbedtls_mpi_read_string(&(mbedtlsDhmContext->G), 16, MBEDTLS_DHM_RFC3526_MODP_3072_G) != 0)) {
++			if ((mbedtls_mpi_read_binary(&(mbedtlsDhmContext->MBEDTLS_PRIVATE(P)), dhm_P_3072, sizeof(dhm_P_3072)) != 0) ||
++			(mbedtls_mpi_read_binary(&(mbedtlsDhmContext->MBEDTLS_PRIVATE(G)), dhm_G_3072, sizeof(dhm_G_3072)) != 0)) {
+ 				return NULL;
+ 			}
+ 			context->primeLength=384;
+-			mbedtlsDhmContext->len=384;
+ 			break;
+ 		default:
+ 			free(context);
+@@ -884,7 +918,7 @@ int32_t bctbx_ssl_read(bctbx_ssl_context
+ int32_t bctbx_ssl_handshake(bctbx_ssl_context_t *ssl_ctx) {
+ 
+ 	int ret = 0;
+-	while( ssl_ctx->ssl_ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER )
++	while( ssl_ctx->ssl_ctx.MBEDTLS_PRIVATE(state) != MBEDTLS_SSL_HANDSHAKE_OVER )
+ 	{
+ 		ret = mbedtls_ssl_handshake_step(&(ssl_ctx->ssl_ctx));
+ 		if( ret != 0 ) {
+@@ -895,11 +929,11 @@ int32_t bctbx_ssl_handshake(bctbx_ssl_co
+ 		if (ssl_ctx->callback_cli_cert_function != NULL) { /* check we have a callback function */
+ 			/* when in state SSL_CLIENT_CERTIFICATE - which means, next call to ssl_handshake_step will send the client certificate to server -
+ 			 * and the client_auth flag is set - which means the server requested a client certificate - */
+-			if (ssl_ctx->ssl_ctx.state == MBEDTLS_SSL_CLIENT_CERTIFICATE && ssl_ctx->ssl_ctx.client_auth > 0) {
++			if (ssl_ctx->ssl_ctx.MBEDTLS_PRIVATE(state) == MBEDTLS_SSL_CLIENT_CERTIFICATE && ssl_ctx->ssl_ctx.MBEDTLS_PRIVATE(client_auth) > 0) {
+ 				/* Retrieve peer certificate subject altname and cn during handshake from server certificate request
+ 				 * Get the peer certificate from mbedtls ssl context. No accessor to get it,
+ 				 * fetch it directly from session_negociate which holds the currently negotiated handshake */
+-				bctbx_list_t *names = bctbx_x509_certificate_get_subjects((const bctbx_x509_certificate_t *)ssl_ctx->ssl_ctx.session_negotiate->peer_cert);
++				bctbx_list_t *names = bctbx_x509_certificate_get_subjects((const bctbx_x509_certificate_t *)ssl_ctx->ssl_ctx.MBEDTLS_PRIVATE(session_negotiate)->MBEDTLS_PRIVATE(peer_cert));
+ 
+ 				if (ssl_ctx->callback_cli_cert_function(ssl_ctx->callback_cli_cert_data, ssl_ctx, names)!=0) {
+ 					bctbx_list_free_with_data(names, bctbx_free);
+@@ -924,10 +958,10 @@ int32_t bctbx_ssl_handshake(bctbx_ssl_co
+ int32_t bctbx_ssl_set_hs_own_cert(bctbx_ssl_context_t *ssl_ctx, bctbx_x509_certificate_t *cert, bctbx_signing_key_t *key) {
+ 	/* WARNING Dirty-Dirty trick : in mbedtls ssl_set_hs_own_cert shall be caller on server side only for SNI, there is no real equivalent on client side yet */
+ 	/* If we are server call the regular function */
+-	if (ssl_ctx->ssl_ctx.conf->endpoint == MBEDTLS_SSL_IS_SERVER ) {
++	if (ssl_ctx->ssl_ctx.MBEDTLS_PRIVATE(conf)->MBEDTLS_PRIVATE(endpoint) == MBEDTLS_SSL_IS_SERVER ) {
+ 		return mbedtls_ssl_set_hs_own_cert(&(ssl_ctx->ssl_ctx) , (mbedtls_x509_crt *)cert , (mbedtls_pk_context *)key);
+ 	} else { /* if we are client, call the conf function on the function in use inside the ssl_context, dirty but it works for now */
+-		return mbedtls_ssl_conf_own_cert((mbedtls_ssl_config *)ssl_ctx->ssl_ctx.conf , (mbedtls_x509_crt *)cert , (mbedtls_pk_context *)key);
++		return mbedtls_ssl_conf_own_cert((mbedtls_ssl_config *)ssl_ctx->ssl_ctx.MBEDTLS_PRIVATE(conf) , (mbedtls_x509_crt *)cert , (mbedtls_pk_context *)key);
+ 	}
+ }
+ 
+@@ -1038,7 +1072,7 @@ bctbx_dtls_srtp_profile_t bctbx_ssl_get_
+ 
+ 	mbedtls_dtls_srtp_info dtls_srtp_negotiation_result;
+ 	mbedtls_ssl_get_dtls_srtp_negotiation_result(&(ssl_ctx->ssl_ctx), &dtls_srtp_negotiation_result);
+-	return bctbx_srtp_profile_mbedtls2bctoolbox(dtls_srtp_negotiation_result.chosen_dtls_srtp_profile);
++	return bctbx_srtp_profile_mbedtls2bctoolbox(dtls_srtp_negotiation_result.MBEDTLS_PRIVATE(chosen_dtls_srtp_profile));
+ };
+ 
+ #else /* HAVE_DTLS_SRTP */
+@@ -1734,12 +1768,18 @@ bctbx_aes_gcm_context_t *bctbx_aes_gcm_c
+ 		return NULL;
+ 	}
+ 
+-	ret = mbedtls_gcm_starts(ctx, mbedtls_mode, initializationVector, initializationVectorLength, authenticatedData, authenticatedDataLength);
++	ret = mbedtls_gcm_starts(ctx, mbedtls_mode, initializationVector, initializationVectorLength);
++	if (ret != 0) {
++		bctbx_free(ctx);
++		return NULL;
++	}
++	ret = mbedtls_gcm_update_ad(ctx, authenticatedData, authenticatedDataLength);
+ 	if (ret != 0) {
+ 		bctbx_free(ctx);
+ 		return NULL;
+ 	}
+ 
++
+ 	return (bctbx_aes_gcm_context_t *)ctx;
+ }
+ 
+@@ -1756,7 +1796,8 @@ bctbx_aes_gcm_context_t *bctbx_aes_gcm_c
+ int32_t bctbx_aes_gcm_process_chunk(bctbx_aes_gcm_context_t *context,
+ 		const uint8_t *input, size_t inputLength,
+ 		uint8_t *output) {
+-	return mbedtls_gcm_update((mbedtls_gcm_context *)context, inputLength, input, output);
++	size_t outputLength;
++	return mbedtls_gcm_update((mbedtls_gcm_context *)context, input, inputLength, output, inputLength, &outputLength);
+ }
+ 
+ /**
+@@ -1771,6 +1812,7 @@ int32_t bctbx_aes_gcm_process_chunk(bctb
+ int32_t bctbx_aes_gcm_finish(bctbx_aes_gcm_context_t *context,
+ 		uint8_t *tag, size_t tagLength) {
+ 	int ret;
++	size_t outputLength;
+ 
+ 	ret = mbedtls_gcm_finish((mbedtls_gcm_context *)context, tag, tagLength);
+ 	mbedtls_gcm_free((mbedtls_gcm_context *)context);

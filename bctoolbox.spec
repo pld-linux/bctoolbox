@@ -18,6 +18,7 @@ Group:		Libraries
 #Source0Download: https://gitlab.linphone.org/BC/public/bctoolbox/tags
 Source0:	https://gitlab.linphone.org/BC/public/bctoolbox/-/archive/%{version}/%{name}-%{version}.tar.bz2
 # Source0-md5:	d2d678fd2ee576ed2b85fd9eaa917515
+Patch0:		mbedtls.patch
 URL:		https://linphone.org/
 # with junit xml support
 BuildRequires:	bcunit-devel >= 3.0.2-3.20200822
@@ -65,6 +66,7 @@ Statyczne biblioteki bctoolbox.
 
 %prep
 %setup -q
+%patch0 -p1
 
 %build
 install -d builddir
