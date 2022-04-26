@@ -4,7 +4,7 @@
 %bcond_without	static_libs	# static libraries
 
 %if %{with dtls_srtp}
-%define		mbedtls_ver	2.26.0-2
+%define		mbedtls_ver	2.26.0-1
 %else
 %define		mbedtls_ver	2
 %endif
@@ -12,7 +12,7 @@ Summary:	Utility library for software from Belledonne Communications
 Summary(pl.UTF-8):	Biblioteka narzędziowa dla oprogramowania firmy Belledonne Communications
 Name:		bctoolbox
 Version:	5.1.17
-Release:	0.1
+Release:	1
 License:	GPL v3+
 Group:		Libraries
 #Source0Download: https://gitlab.linphone.org/BC/public/bctoolbox/tags
@@ -25,9 +25,9 @@ BuildRequires:	bcunit-devel >= 3.0.2-3.20200822
 BuildRequires:	cmake >= 2.8.12
 BuildRequires:	libdecaf-devel
 BuildRequires:	libstdc++-devel >= 6:4.7
-BuildRequires:	mbedtls-devel >= %{mbedtls_ver}
+BuildRequires:	mbedtls2-devel >= %{mbedtls_ver}
 BuildRequires:	sed >= 4.0
-Requires:	mbedtls >= %{mbedtls_ver}
+Requires:	mbedtls2 >= %{mbedtls_ver}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -44,7 +44,7 @@ Summary(pl.UTF-8):	Pliki nagłówkowe bibliotek bctoolbox
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 Requires:	libdecaf-devel
-Requires:	mbedtls-devel >= %{mbedtls_ver}
+Requires:	mbedtls2-devel >= %{mbedtls_ver}
 
 %description devel
 Header files for bctoolbox libraries.
@@ -66,7 +66,8 @@ Statyczne biblioteki bctoolbox.
 
 %prep
 %setup -q
-%patch0 -p1
+# mbedtls 3.0 port
+#%patch0 -p1
 
 %build
 install -d builddir
