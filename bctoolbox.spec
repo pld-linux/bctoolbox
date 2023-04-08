@@ -11,23 +11,23 @@
 Summary:	Utility library for software from Belledonne Communications
 Summary(pl.UTF-8):	Biblioteka narzędziowa dla oprogramowania firmy Belledonne Communications
 Name:		bctoolbox
-Version:	5.1.17
+Version:	5.2.49
 Release:	1
 License:	GPL v3+
 Group:		Libraries
 #Source0Download: https://gitlab.linphone.org/BC/public/bctoolbox/tags
 Source0:	https://gitlab.linphone.org/BC/public/bctoolbox/-/archive/%{version}/%{name}-%{version}.tar.bz2
-# Source0-md5:	d2d678fd2ee576ed2b85fd9eaa917515
-Patch0:		mbedtls.patch
+# Source0-md5:	bd3d6423b8fcc03035109434d74ca4c0
+Patch0:		%{name}-mbedtlsv3.patch
 URL:		https://linphone.org/
-# with junit xml support
-BuildRequires:	bcunit-devel >= 3.0.2-3.20200822
-BuildRequires:	cmake >= 2.8.12
-BuildRequires:	libdecaf-devel
+BuildRequires:	bcunit-devel >= 5.2.0
+BuildRequires:	cmake >= 3.2
+BuildRequires:	libdecaf-devel >= 1.0.2
 BuildRequires:	libstdc++-devel >= 6:4.7
-BuildRequires:	mbedtls2-devel >= %{mbedtls_ver}
+BuildRequires:	mbedtls-devel >= %{mbedtls_ver}
 BuildRequires:	sed >= 4.0
-Requires:	mbedtls2 >= %{mbedtls_ver}
+Requires:	libdecaf >= 1.0.2
+Requires:	mbedtls >= %{mbedtls_ver}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -43,8 +43,8 @@ Summary:	Header files for bctoolbox libraries
 Summary(pl.UTF-8):	Pliki nagłówkowe bibliotek bctoolbox
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
-Requires:	libdecaf-devel
-Requires:	mbedtls2-devel >= %{mbedtls_ver}
+Requires:	libdecaf-devel >= 1.0.2
+Requires:	mbedtls-devel >= %{mbedtls_ver}
 
 %description devel
 Header files for bctoolbox libraries.
@@ -66,8 +66,7 @@ Statyczne biblioteki bctoolbox.
 
 %prep
 %setup -q
-# mbedtls 3.0 port
-#%patch0 -p1
+%patch0 -p1
 
 %build
 install -d builddir
@@ -100,6 +99,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(644,root,root,755)
+%attr(755,root,root) %{_bindir}/bctoolbox_tester
 %attr(755,root,root) %{_libdir}/libbctoolbox.so
 %attr(755,root,root) %{_libdir}/libbctoolbox-tester.so
 %{_includedir}/bctoolbox
