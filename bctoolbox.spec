@@ -20,7 +20,7 @@ Source0:	https://gitlab.linphone.org/BC/public/bctoolbox/-/archive/%{version}/%{
 # Source0-md5:	a96dfdc65b3771476abefcf50ad8469b
 Patch0:		%{name}-decaf-shared.patch
 URL:		https://linphone.org/
-BuildRequires:	bcunit-devel >= 5.2.0
+BuildRequires:	bcunit-devel >= 5.3.0
 BuildRequires:	cmake >= 3.22
 BuildRequires:	libdecaf-devel >= 1.0.2
 BuildRequires:	libstdc++-devel >= 6:7
