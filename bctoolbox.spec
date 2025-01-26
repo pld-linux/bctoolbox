@@ -11,13 +11,13 @@
 Summary:	Utility library for software from Belledonne Communications
 Summary(pl.UTF-8):	Biblioteka narzędziowa dla oprogramowania firmy Belledonne Communications
 Name:		bctoolbox
-Version:	5.3.26
+Version:	5.3.104
 Release:	1
 License:	GPL v3+
 Group:		Libraries
 #Source0Download: https://gitlab.linphone.org/BC/public/bctoolbox/tags
 Source0:	https://gitlab.linphone.org/BC/public/bctoolbox/-/archive/%{version}/%{name}-%{version}.tar.bz2
-# Source0-md5:	a96dfdc65b3771476abefcf50ad8469b
+# Source0-md5:	9e73f6c6303c285d49d0d08e18ce9a62
 Patch0:		%{name}-decaf-shared.patch
 URL:		https://linphone.org/
 BuildRequires:	bcunit-devel >= 5.3.0
@@ -66,7 +66,7 @@ Statyczne biblioteki bctoolbox.
 
 %prep
 %setup -q
-%patch0 -p1
+%patch -P 0 -p1
 
 %build
 %if %{with static_libs}
