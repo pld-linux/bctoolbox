@@ -3,22 +3,19 @@
 %bcond_without	dtls_srtp	# DTLS SRTP support
 %bcond_without	static_libs	# static libraries
 
-%if %{with dtls_srtp}
-%define		mbedtls_ver	2.26.0-1
-%else
-%define		mbedtls_ver	2
-%endif
+%define		mbedtls_ver	3
 Summary:	Utility library for software from Belledonne Communications
 Summary(pl.UTF-8):	Biblioteka narzędziowa dla oprogramowania firmy Belledonne Communications
 Name:		bctoolbox
-Version:	5.3.104
+Version:	5.4.17
 Release:	1
 License:	GPL v3+
 Group:		Libraries
 #Source0Download: https://gitlab.linphone.org/BC/public/bctoolbox/tags
 Source0:	https://gitlab.linphone.org/BC/public/bctoolbox/-/archive/%{version}/%{name}-%{version}.tar.bz2
-# Source0-md5:	9e73f6c6303c285d49d0d08e18ce9a62
+# Source0-md5:	c5bf3fdbbe08df0c1e28f0a927d96fff
 Patch0:		%{name}-decaf-shared.patch
+Patch1:		%{name}-mbedtls.patch
 URL:		https://linphone.org/
 BuildRequires:	bcunit-devel >= 5.3.0
 BuildRequires:	cmake >= 3.22
@@ -67,6 +64,7 @@ Statyczne biblioteki bctoolbox.
 %prep
 %setup -q
 %patch -P 0 -p1
+%patch -P 1 -p1
 
 %build
 %if %{with static_libs}
